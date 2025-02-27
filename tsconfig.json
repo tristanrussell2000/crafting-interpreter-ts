@@ -2,5 +2,10 @@
     "extends": "@tsconfig/node21/tsconfig.json",
 
     "include": ["app/**/*"],
-    "exclude": ["**/*.spec.ts"]
+    "exclude": ["**/*.spec.ts"],
+    "compilerOptions": {
+        "rootDir": "app",
+        "outDir": "build",
+        "sourceMap": true
+    }
 }
