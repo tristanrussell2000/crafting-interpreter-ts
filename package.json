@@ -6,5 +6,9 @@
     "@tsconfig/node21": "^21.0.3",
     "@types/node": "^22.12.0",
     "typescript": "^5.7.3"
+  },
+  "scripts": {
+    "start": "node build/main.js",
+    "tokenize-test": "node build/main.js tokenize test.lox"
   }
 }
