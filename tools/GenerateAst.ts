@@ -4,60 +4,95 @@ import fs from "fs";
 const args = process.argv.slice(2);
 
 if (args.length != 1) {
-  console.error("Usage: GenerateAst.js <output directory>");
-  process.exit(64);
+    console.error("Usage: GenerateAst.js <output directory>");
+    process.exit(64);
 }
 
 const outputDir = args[0];
 
 function defineType(
-  stream: fs.WriteStream,
-  baseName: string,
-  className: string,
-  fields: string
+    writer: fs.WriteStream,
+    baseName: string,
+    className: string,
+    fields: string
 ) {
-  const fieldList = fields.split(", ");
-  stream.write("export class " + className + " extends " + baseName + " {\n");
+    const fieldList = fields.split(", ");
+    writer.write("export class " + className + " extends " + baseName + " {\n");
 
-  for (const field of fieldList) {
-    stream.write("  readonly " + field + ";\n");
-  }
+    for (const field of fieldList) {
+        writer.write("    readonly " + field + ";\n");
+    }
 
-  stream.write("\n");
+    writer.write("\n");
 
-  stream.write("  constructor(" + fields + ") {\n");
-  stream.write("  super()\n");
-  for (const field of fieldList) {
-    const name = field.split(": ")[0];
-    stream.write("      this." + name + " = " + name + ";\n");
-  }
+    writer.write("    constructor(" + fields + ") {\n");
+    writer.write("    super()\n");
+    for (const field of fieldList) {
+        const name = field.split(": ")[0];
+        writer.write("        this." + name + " = " + name + ";\n");
+    }
 
-  stream.write("  }\n");
+    writer.write("    }\n");
 
-  stream.write("}\n");
+    writer.write("\n");
+    writer.write("    accept<R>(visitor: Visitor<R>): R {\n");
+    writer.write(
+        "        return visitor.visit" + className + baseName + "(this);\n"
+    );
+    writer.write("    }\n");
+
+    writer.write("}\n");
 }
 
-function defineAst(outputDir: string, baseName: string, types: Array<String>) {
-  const path = outputDir + "/" + baseName + ".ts";
-  const stream = fs.createWriteStream(path);
+function defineVisitor(
+    writer: fs.WriteStream,
+    baseName: string,
+    types: string[]
+) {
+    writer.write("interface Visitor<R> {\n");
 
-  stream.write('import Token from "./Token.js";\n\n');
+    for (const type of types) {
+        const typeName = type.split("-")[0];
+        writer.write(
+            "  visit" +
+                typeName +
+                baseName +
+                "(" +
+                baseName.toLowerCase() +
+                ": " +
+                typeName +
+                "): R;\n"
+        );
+    }
+    writer.write("}\n\n");
+}
 
-  stream.write("class " + baseName + "{\n");
-  stream.write("}\n");
+function defineAst(outputDir: string, baseName: string, types: Array<string>) {
+    const path = outputDir + "/" + baseName + ".ts";
+    const writer = fs.createWriteStream(path);
 
-  for (const type of types) {
-    const className = type.split("-")[0].trim();
-    const fields = type.split("-")[1].trim();
-    defineType(stream, baseName, className, fields);
-  }
+    writer.write('import Token from "./Token.js";\n\n');
 
-  stream.end();
+    writer.write("abstract class " + baseName + "{\n");
+    writer.write("  abstract accept<R>(visitor: Visitor<R>): R;\n");
+    writer.write("}\n\n");
+
+    defineVisitor(writer, baseName, types);
+
+    for (const type of types) {
+        const className = type.split("-")[0].trim();
+        const fields = type.split("-")[1].trim();
+        defineType(writer, baseName, className, fields);
+    }
+
+    writer.write("\n");
+
+    writer.end();
 }
 
 defineAst(outputDir, "Expr", [
-  "Binary- left: Expr, operator: Token, right: Expr",
-  "Grouping- expression: Expr",
-  "Literal- value: Object",
-  "Unary- operator: Token, right: Expr",
+    "Binary- left: Expr, operator: Token, right: Expr",
+    "Grouping- expression: Expr",
+    "Literal- value: Object",
+    "Unary- operator: Token, right: Expr",
 ]);
