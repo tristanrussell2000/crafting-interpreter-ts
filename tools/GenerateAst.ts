@@ -26,7 +26,7 @@ function defineType(
     writer.write("\n");
 
     writer.write("    constructor(" + fields + ") {\n");
-    writer.write("    super()\n");
+    writer.write("        super()\n");
     for (const field of fieldList) {
         const name = field.split(": ")[0];
         writer.write("        this." + name + " = " + name + ";\n");
