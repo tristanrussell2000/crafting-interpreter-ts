@@ -101,6 +101,22 @@ export default class Scanner {
     );
   }
 
+  #multilineComment() {
+    while (
+      !(this.#peek() === "*" && this.#peekNext() === "/") &&
+      !this.#isAtEnd()
+    ) {
+      if (this.#peek() == "\n") this.#line++;
+      this.#advance();
+    }
+
+    if (this.#isAtEnd()) {
+      return;
+    }
+    this.#advance();
+    this.#advance();
+  }
+
   #identifier() {
     while (this.#isAlphaNumeric(this.#peek())) this.#advance();
 
@@ -174,6 +190,8 @@ export default class Scanner {
       case "/":
         if (this.#match("/")) {
           while (this.#peek() != "\n" && !this.#isAtEnd()) this.#advance();
+        } else if (this.#match("*")) {
+          this.#multilineComment();
         } else {
           this.#addToken(TokenType.SLASH);
         }
