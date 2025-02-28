@@ -49,7 +49,7 @@ function defineVisitor(
     baseName: string,
     types: string[]
 ) {
-    writer.write("interface Visitor<R> {\n");
+    writer.write("export interface Visitor<R> {\n");
 
     for (const type of types) {
         const typeName = type.split("-")[0];
@@ -73,7 +73,7 @@ function defineAst(outputDir: string, baseName: string, types: Array<string>) {
 
     writer.write('import Token from "./Token.js";\n\n');
 
-    writer.write("abstract class " + baseName + "{\n");
+    writer.write("export abstract class " + baseName + "{\n");
     writer.write("  abstract accept<R>(visitor: Visitor<R>): R;\n");
     writer.write("}\n\n");
 
