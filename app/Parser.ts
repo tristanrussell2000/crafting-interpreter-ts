@@ -164,6 +164,26 @@ export class Parser {
             const right = this.#unary();
             return new Unary(operator, right);
         }
+        if (
+            this.#match(
+                TokenType.PLUS,
+                TokenType.MINUS,
+                TokenType.SLASH,
+                TokenType.STAR,
+                TokenType.GREATER,
+                TokenType.GREATER_EQUAL,
+                TokenType.LESS,
+                TokenType.LESS_EQUAL
+            )
+        ) {
+            const operator = this.#previous();
+            const right = this.#unary();
+            const error = Parser.error(
+                operator,
+                "Binary operator must have left operand"
+            );
+            throw error;
+        }
         return this.#primary();
     }
 
