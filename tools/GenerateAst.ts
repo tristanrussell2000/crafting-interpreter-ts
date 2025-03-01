@@ -93,6 +93,6 @@ function defineAst(outputDir: string, baseName: string, types: Array<string>) {
 defineAst(outputDir, "Expr", [
     "Binary- left: Expr, operator: Token, right: Expr",
     "Grouping- expression: Expr",
-    "Literal- value: Object",
+    "Literal- value: Object|null",
     "Unary- operator: Token, right: Expr",
 ]);

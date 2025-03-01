@@ -2,7 +2,7 @@ import { Expr, Visitor, Binary, Grouping, Literal, Unary } from "./Expr.js";
 import TokenType from "./TokenType.js";
 import Token from "./Token.js";
 
-class AstPrinter implements Visitor<string> {
+export class AstPrinter implements Visitor<string> {
     print(expr: Expr): string {
         return expr.accept(this);
     }
