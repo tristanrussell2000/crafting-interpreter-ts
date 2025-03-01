@@ -11,6 +11,8 @@ enum TokenType {
     SEMICOLON = "SEMICOLON",
     SLASH = "SLASH",
     STAR = "STAR",
+    COLON = "COLON",
+    QUESTION = "QUESTION",
 
     // One or two character tokens
     BANG = "BANG",

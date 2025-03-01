@@ -5,12 +5,29 @@ export abstract class Expr{
 }
 
 export interface Visitor<R> {
+  visitTernaryExpr(expr: Ternary): R;
   visitBinaryExpr(expr: Binary): R;
   visitGroupingExpr(expr: Grouping): R;
   visitLiteralExpr(expr: Literal): R;
   visitUnaryExpr(expr: Unary): R;
 }
 
+export class Ternary extends Expr {
+    readonly condition: Expr;
+    readonly left: Expr;
+    readonly right: Expr;
+
+    constructor(condition: Expr, left: Expr, right: Expr) {
+    super()
+        this.condition = condition;
+        this.left = left;
+        this.right = right;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitTernaryExpr(this);
+    }
+}
 export class Binary extends Expr {
     readonly left: Expr;
     readonly operator: Token;

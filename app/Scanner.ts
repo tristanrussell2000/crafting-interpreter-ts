@@ -154,6 +154,12 @@ export default class Scanner {
             case "*":
                 this.#addToken(TokenType.STAR);
                 break;
+            case "?":
+                this.#addToken(TokenType.QUESTION);
+                break;
+            case ":":
+                this.#addToken(TokenType.COLON);
+                break;
             case "!":
                 this.#addToken(
                     this.#match("=") ? TokenType.BANG_EQUAL : TokenType.BANG

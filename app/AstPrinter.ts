@@ -1,4 +1,12 @@
-import { Expr, Visitor, Binary, Grouping, Literal, Unary } from "./Expr.js";
+import {
+    Expr,
+    Visitor,
+    Binary,
+    Grouping,
+    Literal,
+    Unary,
+    Ternary,
+} from "./Expr.js";
 import TokenType from "./TokenType.js";
 import Token from "./Token.js";
 
@@ -34,5 +42,17 @@ export class AstPrinter implements Visitor<string> {
 
     visitUnaryExpr(expr: Unary): string {
         return this.#parenthesize(expr.operator.lexeme, expr.right);
+    }
+
+    visitTernaryExpr(expr: Ternary): string {
+        return (
+            "(" +
+            expr.condition.accept(this) +
+            " ? " +
+            expr.left.accept(this) +
+            " : " +
+            expr.right.accept(this) +
+            ")"
+        );
     }
 }

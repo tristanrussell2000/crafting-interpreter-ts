@@ -1,4 +1,4 @@
-import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
+import { Binary, Expr, Grouping, Literal, Ternary, Unary } from "./Expr.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { parseError } from "./main.js";
@@ -85,12 +85,26 @@ export class Parser {
     }
 
     #comma(): Expr {
-        let expr = this.#equality();
+        let expr = this.#ternary();
 
         if (this.#match(TokenType.COMMA)) {
-            return this.#comma();
+            return this.#ternary();
         }
         return expr;
+    }
+
+    #ternary(): Expr {
+        let condition = this.#equality();
+
+        if (this.#match(TokenType.QUESTION)) {
+            const left = this.#ternary();
+            if (this.#match(TokenType.COLON)) {
+                const right = this.#ternary();
+                return new Ternary(condition, left, right);
+            }
+            throw Parser.error(this.#peek(), "Expect expression.");
+        }
+        return condition;
     }
 
     #equality(): Expr {
