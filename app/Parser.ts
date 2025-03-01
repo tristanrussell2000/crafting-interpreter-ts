@@ -81,7 +81,16 @@ export class Parser {
     // Parsing Grammar Functions
     // Each matches a same named operator, or one of higher precedence
     #expression(): Expr {
-        return this.#equality();
+        return this.#comma();
+    }
+
+    #comma(): Expr {
+        let expr = this.#equality();
+
+        if (this.#match(TokenType.COMMA)) {
+            return this.#comma();
+        }
+        return expr;
     }
 
     #equality(): Expr {
