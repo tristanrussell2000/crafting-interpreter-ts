@@ -83,6 +83,12 @@ export class Interpreter implements Visitor<Object | null> {
                 return <number>left - <number>right;
             case TokenType.SLASH:
                 this.#checkNumberOperands(expr.operator, left, right);
+                if (right === 0) {
+                    throw new RuntimeError(
+                        expr.operator,
+                        "Can't divide by zero!"
+                    );
+                }
                 return <number>left / <number>right;
             case TokenType.STAR:
                 this.#checkNumberOperands(expr.operator, left, right);
@@ -93,6 +99,9 @@ export class Interpreter implements Visitor<Object | null> {
                 }
                 if (typeof left === "string" && typeof right === "string") {
                     return left + right;
+                }
+                if (typeof left === "string" || typeof right === "string") {
+                    return (left?.toString() ?? "") + (right?.toString() ?? "");
                 }
                 throw new RuntimeError(
                     expr.operator,
