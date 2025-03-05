@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node build/app/main.js",
-    "tokenize-test": "node build/main.js tokenize test.lox"
+    "test": "node build/app/main.js tokenize test.lox",
+    "generate": "node build/tools/GenerateAst.js app"
   }
 }

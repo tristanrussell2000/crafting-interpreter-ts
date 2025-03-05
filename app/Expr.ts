@@ -1,5 +1,4 @@
 import Token from "./Token.js";
-
 export abstract class Expr{
   abstract accept<R>(visitor: Visitor<R>): R;
 }
@@ -17,7 +16,7 @@ export class Binary extends Expr {
     readonly right: Expr;
 
     constructor(left: Expr, operator: Token, right: Expr) {
-    super()
+        super()
         this.left = left;
         this.operator = operator;
         this.right = right;
@@ -31,7 +30,7 @@ export class Grouping extends Expr {
     readonly expression: Expr;
 
     constructor(expression: Expr) {
-    super()
+        super()
         this.expression = expression;
     }
 
@@ -43,7 +42,7 @@ export class Literal extends Expr {
     readonly value: Object|null;
 
     constructor(value: Object|null) {
-    super()
+        super()
         this.value = value;
     }
 
@@ -56,7 +55,7 @@ export class Unary extends Expr {
     readonly right: Expr;
 
     constructor(operator: Token, right: Expr) {
-    super()
+        super()
         this.operator = operator;
         this.right = right;
     }

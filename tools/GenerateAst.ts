@@ -26,7 +26,7 @@ function defineType(
     writer.write("\n");
 
     writer.write("    constructor(" + fields + ") {\n");
-    writer.write("    super()\n");
+    writer.write("        super()\n");
     for (const field of fieldList) {
         const name = field.split(": ")[0];
         writer.write("        this." + name + " = " + name + ";\n");
@@ -71,7 +71,9 @@ function defineAst(outputDir: string, baseName: string, types: Array<string>) {
     const path = outputDir + "/" + baseName + ".ts";
     const writer = fs.createWriteStream(path);
 
-    writer.write('import Token from "./Token.js";\n\n');
+    writer.write('import Token from "./Token.js";\n');
+    if (baseName != "Expr")
+        writer.write("import { Expr } from './Expr.js';\n\n");
 
     writer.write("export abstract class " + baseName + "{\n");
     writer.write("  abstract accept<R>(visitor: Visitor<R>): R;\n");
@@ -95,4 +97,9 @@ defineAst(outputDir, "Expr", [
     "Grouping- expression: Expr",
     "Literal- value: Object|null",
     "Unary- operator: Token, right: Expr",
+]);
+
+defineAst(outputDir, "Stmt", [
+    "Expression- expression: Expr",
+    "Print- expression: Expr",
 ]);

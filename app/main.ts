@@ -36,10 +36,10 @@ function run(source: string) {
     const scanner: Scanner = new Scanner(source);
     const tokens: Array<Token> = scanner.scanTokens();
     const parser = new Parser(tokens);
-    const expression = parser.parse();
-    if (expression === null) return;
+    const statements = parser.parse();
+    if (statements === null) return;
 
-    interpreter.interpret(expression);
+    interpreter.interpret(statements);
 }
 
 export function error(line: number, message: string, character?: string) {
@@ -69,11 +69,10 @@ const args = process.argv.slice(2); // Skip the first two arguments (node path a
 let command = "";
 let filename = "";
 if (args.length > 2) {
-    console.error("Usage: ./your_program.sh tokenize <filename>");
+    console.error("Usage: ./your_program.sh command <filename>");
     process.exit(1);
 } else if (args.length < 1) {
-    console.error("Usage: ./your_program.sh tokenize <filename>");
-    process.exit(1);
+    // Ignore command
 } else if (args.length === 1) {
     command = args[0];
 } else if (args.length === 2) {
@@ -81,8 +80,9 @@ if (args.length > 2) {
     filename = args[1];
 }
 
-if (command === "tokenize") {
-    runFile(filename);
-} else if (command === "tokenizePrompt") {
+// Ignore command for now
+if (!filename) {
     runPrompt();
+} else {
+    runFile(filename);
 }

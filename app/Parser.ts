@@ -1,4 +1,5 @@
 import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
+import { Expression, Print, Stmt } from "./Stmt.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { parseError } from "./main.js";
@@ -80,6 +81,23 @@ export class Parser {
 
     // Parsing Grammar Functions
     // Each matches a same named operator, or one of higher precedence
+    #statement(): Stmt {
+        if (this.#match(TokenType.PRINT)) return this.#printStatement();
+        return this.#expressionStatement();
+    }
+
+    #printStatement(): Stmt {
+        const value = this.#expression();
+        this.#consume(TokenType.SEMICOLON, "Expect ';' after value.");
+        return new Print(value);
+    }
+
+    #expressionStatement(): Stmt {
+        const expr = this.#expression();
+        this.#consume(TokenType.SEMICOLON, "Expect ';' after expression.");
+        return new Expression(expr);
+    }
+
     #expression(): Expr {
         return this.#equality();
     }
@@ -165,12 +183,12 @@ export class Parser {
         throw Parser.error(this.#peek(), "Expect expression.");
     }
 
-    parse(): Expr | null {
-        try {
-            return this.#expression();
-        } catch (error) {
-            return null;
+    parse(): Stmt[] {
+        const statements: Stmt[] = [];
+        while (!this.#isAtEnd()) {
+            statements.push(this.#statement());
         }
+        return statements;
     }
 }
 

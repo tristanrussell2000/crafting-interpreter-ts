@@ -3,12 +3,14 @@ import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { RuntimeError } from "./RuntimeError.js";
 import { runtimeError } from "./main.js";
+import { Stmt, Expression, Print, Visitor as StmtVisitor } from "./Stmt.js";
 
-export class Interpreter implements Visitor<Object | null> {
-    interpret(expression: Expr) {
+export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
+    interpret(statements: Stmt[]) {
         try {
-            const value = this.#evaluate(expression);
-            console.log(this.#stringify(value));
+            for (const statement of statements) {
+                this.#execute(statement);
+            }
         } catch (error) {
             if (error instanceof RuntimeError) {
                 runtimeError(error);
@@ -16,6 +18,10 @@ export class Interpreter implements Visitor<Object | null> {
                 console.error(error);
             }
         }
+    }
+
+    #execute(stmt: Stmt) {
+        stmt.accept(this);
     }
 
     #stringify(object: Object | null): string {
@@ -116,5 +122,14 @@ export class Interpreter implements Visitor<Object | null> {
                 return this.#isEqual(left, right);
         }
         return null;
+    }
+
+    visitExpressionStmt(stmt: Expression): void {
+        this.#evaluate(stmt.expression);
+    }
+
+    visitPrintStmt(stmt: Print): void {
+        const value = this.#evaluate(stmt.expression);
+        console.log(this.#stringify(value));
     }
 }
