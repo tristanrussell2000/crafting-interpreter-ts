@@ -5,13 +5,18 @@ import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { Parser } from "./Parser.js";
 import { AstPrinter } from "./AstPrinter.js";
+import { RuntimeError } from "./RuntimeError.js";
+import { Interpreter } from "./Interpreter.js";
 
+const interpreter = new Interpreter();
 let hadError = false;
+let hadRuntimeError = false;
 
 function runFile(path: string) {
     const fileContent = fs.readFileSync(path, "utf8");
     run(fileContent);
     if (hadError) process.exit(65);
+    if (hadRuntimeError) process.exit(70);
 }
 
 async function runPrompt() {
@@ -33,9 +38,8 @@ function run(source: string) {
     const parser = new Parser(tokens);
     const expression = parser.parse();
     if (expression === null) return;
-    if (hadError) return;
 
-    console.log(new AstPrinter().print(expression));
+    interpreter.interpret(expression);
 }
 
 export function error(line: number, message: string, character?: string) {
@@ -54,6 +58,11 @@ export function parseError(token: Token, message: string) {
     } else {
         report(token.line, " at '" + token.lexeme + "'", message);
     }
+}
+
+export function runtimeError(error: RuntimeError) {
+    console.error(error.message + "\n[line " + error.token.line + "]");
+    hadRuntimeError = true;
 }
 
 const args = process.argv.slice(2); // Skip the first two arguments (node path and script path)
