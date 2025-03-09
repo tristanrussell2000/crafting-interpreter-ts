@@ -4,7 +4,6 @@ import Scanner from "./Scanner.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { Parser } from "./Parser.js";
-import { AstPrinter } from "./AstPrinter.js";
 import { RuntimeError } from "./RuntimeError.js";
 import { Interpreter } from "./Interpreter.js";
 

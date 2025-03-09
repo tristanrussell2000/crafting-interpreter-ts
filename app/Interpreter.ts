@@ -1,12 +1,30 @@
-import { Binary, Expr, Grouping, Literal, Unary, Visitor } from "./Expr.js";
+import {
+    Assign,
+    Binary,
+    Expr,
+    Grouping,
+    Literal,
+    Unary,
+    Variable,
+    Visitor,
+} from "./Expr.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { RuntimeError } from "./RuntimeError.js";
 import { runtimeError } from "./main.js";
-import { Stmt, Expression, Print, Visitor as StmtVisitor } from "./Stmt.js";
+import {
+    Stmt,
+    Expression,
+    Print,
+    Visitor as StmtVisitor,
+    Var,
+} from "./Stmt.js";
+import { Environment } from "./Environment.js";
 
 export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
-    interpret(statements: Stmt[]) {
+    #environment = new Environment();
+
+    interpret(statements: Array<Stmt | null>) {
         try {
             for (const statement of statements) {
                 this.#execute(statement);
@@ -20,7 +38,8 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         }
     }
 
-    #execute(stmt: Stmt) {
+    #execute(stmt: Stmt | null) {
+        if (stmt === null) return;
         stmt.accept(this);
     }
 
@@ -124,6 +143,16 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         return null;
     }
 
+    visitVariableExpr(expr: Variable): Object | null {
+        return this.#environment.get(expr.name);
+    }
+
+    visitAssignExpr(expr: Assign): Object | null {
+        const value = this.#evaluate(expr.value);
+        this.#environment.assign(expr.name, value);
+        return value;
+    }
+
     visitExpressionStmt(stmt: Expression): void {
         this.#evaluate(stmt.expression);
     }
@@ -131,5 +160,13 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     visitPrintStmt(stmt: Print): void {
         const value = this.#evaluate(stmt.expression);
         console.log(this.#stringify(value));
+    }
+
+    visitVarStmt(stmt: Var) {
+        let value: Object | null = null;
+        if (stmt.initializer !== null) {
+            value = this.#evaluate(stmt.initializer);
+        }
+        this.#environment.define(stmt.name.lexeme, value);
     }
 }

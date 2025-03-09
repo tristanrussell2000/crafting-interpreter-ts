@@ -97,9 +97,12 @@ defineAst(outputDir, "Expr", [
     "Grouping- expression: Expr",
     "Literal- value: Object|null",
     "Unary- operator: Token, right: Expr",
+    "Variable- name: Token",
+    "Assign- name: Token, value: Expr",
 ]);
 
 defineAst(outputDir, "Stmt", [
     "Expression- expression: Expr",
     "Print- expression: Expr",
+    "Var- name: Token, initializer: Expr|null",
 ]);

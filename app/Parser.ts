@@ -1,5 +1,13 @@
-import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
-import { Expression, Print, Stmt } from "./Stmt.js";
+import {
+    Assign,
+    Binary,
+    Expr,
+    Grouping,
+    Literal,
+    Unary,
+    Variable,
+} from "./Expr.js";
+import { Expression, Print, Stmt, Var } from "./Stmt.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { parseError } from "./main.js";
@@ -81,6 +89,34 @@ export class Parser {
 
     // Parsing Grammar Functions
     // Each matches a same named operator, or one of higher precedence
+    #declaration(): Stmt | null {
+        try {
+            if (this.#match(TokenType.VAR)) return this.#varDeclaration();
+            return this.#statement();
+        } catch (error) {
+            this.#synchronize();
+            return null;
+        }
+    }
+
+    #varDeclaration(): Stmt {
+        const name = this.#consume(
+            TokenType.IDENTIFIER,
+            "Expect variable name."
+        );
+
+        let initializer: Expr | null = null;
+        if (this.#match(TokenType.EQUAL)) {
+            initializer = this.#expression();
+        }
+
+        this.#consume(
+            TokenType.SEMICOLON,
+            "Expect ';' after variable declaration"
+        );
+        return new Var(name, initializer);
+    }
+
     #statement(): Stmt {
         if (this.#match(TokenType.PRINT)) return this.#printStatement();
         return this.#expressionStatement();
@@ -99,7 +135,25 @@ export class Parser {
     }
 
     #expression(): Expr {
-        return this.#equality();
+        return this.#assignment();
+    }
+
+    #assignment(): Expr {
+        const expr = this.#equality();
+
+        if (this.#match(TokenType.EQUAL)) {
+            const equals = this.#previous();
+            const value = this.#assignment();
+
+            if (expr instanceof Variable) {
+                const name = expr.name;
+                return new Assign(name, value);
+            }
+
+            throw Parser.error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     #equality(): Expr {
@@ -171,6 +225,10 @@ export class Parser {
             return new Literal(this.#previous().literal);
         }
 
+        if (this.#match(TokenType.IDENTIFIER)) {
+            return new Variable(this.#previous());
+        }
+
         if (this.#match(TokenType.LEFT_PAREN)) {
             const expr = this.#expression();
             this.#consume(
@@ -183,10 +241,10 @@ export class Parser {
         throw Parser.error(this.#peek(), "Expect expression.");
     }
 
-    parse(): Stmt[] {
-        const statements: Stmt[] = [];
+    parse(): Array<Stmt | null> {
+        const statements: Array<Stmt | null> = [];
         while (!this.#isAtEnd()) {
-            statements.push(this.#statement());
+            statements.push(this.#declaration());
         }
         return statements;
     }
