@@ -9,6 +9,7 @@ export interface Visitor<R> {
   visitExpressionStmt(stmt: Expression): R;
   visitPrintStmt(stmt: Print): R;
   visitVarStmt(stmt: Var): R;
+  visitBlockStmt(stmt: Block): R;
 }
 
 export class Expression extends Stmt {
@@ -47,6 +48,18 @@ export class Var extends Stmt {
 
     accept<R>(visitor: Visitor<R>): R {
         return visitor.visitVarStmt(this);
+    }
+}
+export class Block extends Stmt {
+    readonly statements: Array<Stmt>;
+
+    constructor(statements: Array<Stmt>) {
+        super()
+        this.statements = statements;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitBlockStmt(this);
     }
 }
 

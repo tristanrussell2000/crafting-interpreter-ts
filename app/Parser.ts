@@ -7,7 +7,7 @@ import {
     Unary,
     Variable,
 } from "./Expr.js";
-import { Expression, Print, Stmt, Var } from "./Stmt.js";
+import { Block, Expression, Print, Stmt, Var } from "./Stmt.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { parseError } from "./main.js";
@@ -119,7 +119,20 @@ export class Parser {
 
     #statement(): Stmt {
         if (this.#match(TokenType.PRINT)) return this.#printStatement();
+        if (this.#match(TokenType.LEFT_BRACE)) return new Block(this.#block());
         return this.#expressionStatement();
+    }
+
+    #block(): Array<Stmt> {
+        const statements = new Array<Stmt>();
+
+        while (!this.#check(TokenType.RIGHT_BRACE) && !this.#isAtEnd()) {
+            const next = this.#declaration();
+            if (next) statements.push(next);
+        }
+
+        this.#consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+        return statements;
     }
 
     #printStatement(): Stmt {

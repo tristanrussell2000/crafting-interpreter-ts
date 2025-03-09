@@ -18,6 +18,7 @@ import {
     Print,
     Visitor as StmtVisitor,
     Var,
+    Block,
 } from "./Stmt.js";
 import { Environment } from "./Environment.js";
 
@@ -41,6 +42,19 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     #execute(stmt: Stmt | null) {
         if (stmt === null) return;
         stmt.accept(this);
+    }
+
+    #executeBlock(statements: Array<Stmt>, environment: Environment) {
+        const previous = this.#environment;
+        try {
+            this.#environment = environment;
+
+            for (const statement of statements) {
+                this.#execute(statement);
+            }
+        } finally {
+            this.#environment = previous;
+        }
     }
 
     #stringify(object: Object | null): string {
@@ -153,11 +167,11 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         return value;
     }
 
-    visitExpressionStmt(stmt: Expression): void {
+    visitExpressionStmt(stmt: Expression) {
         this.#evaluate(stmt.expression);
     }
 
-    visitPrintStmt(stmt: Print): void {
+    visitPrintStmt(stmt: Print) {
         const value = this.#evaluate(stmt.expression);
         console.log(this.#stringify(value));
     }
@@ -168,5 +182,9 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
             value = this.#evaluate(stmt.initializer);
         }
         this.#environment.define(stmt.name.lexeme, value);
+    }
+
+    visitBlockStmt(stmt: Block) {
+        this.#executeBlock(stmt.statements, new Environment(this.#environment));
     }
 }
