@@ -103,6 +103,7 @@ defineAst(outputDir, "Expr", [
 
 defineAst(outputDir, "Stmt", [
     "Expression- expression: Expr",
+    "If- condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null",
     "Print- expression: Expr",
     "Var- name: Token, initializer: Expr|null",
     "Block- statements: Array<Stmt>",

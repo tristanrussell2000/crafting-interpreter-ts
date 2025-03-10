@@ -7,7 +7,7 @@ import {
     Unary,
     Variable,
 } from "./Expr.js";
-import { Block, Expression, Print, Stmt, Var } from "./Stmt.js";
+import { Block, Expression, If, Print, Stmt, Var } from "./Stmt.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { parseError } from "./main.js";
@@ -118,9 +118,23 @@ export class Parser {
     }
 
     #statement(): Stmt {
+        if (this.#match(TokenType.IF)) return this.#ifStatement();
         if (this.#match(TokenType.PRINT)) return this.#printStatement();
         if (this.#match(TokenType.LEFT_BRACE)) return new Block(this.#block());
         return this.#expressionStatement();
+    }
+
+    #ifStatement(): Stmt {
+        this.#consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+        const condition = this.#expression();
+        this.#consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
+
+        const thenBranch = this.#statement();
+        let elseBranch: Stmt | null = null;
+        if (this.#match(TokenType.ELSE)) {
+            elseBranch = this.#statement();
+        }
+        return new If(condition, thenBranch, elseBranch);
     }
 
     #block(): Array<Stmt> {

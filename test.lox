@@ -1,19 +1,6 @@
-var a = "global a";
-var b = "global b";
-var c = "global c";
-{
-  var a = "outer a";
-  var b = "outer b";
-  {
-    var a = "inner a";
-    print a;
-    print b;
-    print c;
-  }
-  print a;
-  print b;
-  print c;
+var a = "test";
+if (a == "testt") {
+    print "Success!";
+} else if (5 == 5) {
+    print "Test";
 }
-print a;
-print b;
-print c;

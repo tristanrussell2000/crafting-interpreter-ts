@@ -19,6 +19,7 @@ import {
     Visitor as StmtVisitor,
     Var,
     Block,
+    If,
 } from "./Stmt.js";
 import { Environment } from "./Environment.js";
 
@@ -186,5 +187,13 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
 
     visitBlockStmt(stmt: Block) {
         this.#executeBlock(stmt.statements, new Environment(this.#environment));
+    }
+
+    visitIfStmt(stmt: If): void {
+        if (this.#isTruthy(this.#evaluate(stmt.condition))) {
+            this.#execute(stmt.thenBranch);
+        } else if (stmt.elseBranch !== null) {
+            this.#execute(stmt.elseBranch);
+        }
     }
 }
