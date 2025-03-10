@@ -108,4 +108,5 @@ defineAst(outputDir, "Stmt", [
     "Print- expression: Expr",
     "Var- name: Token, initializer: Expr|null",
     "Block- statements: Array<Stmt>",
+    "While- condition: Expr, body: Stmt",
 ]);

@@ -21,6 +21,7 @@ import {
     Var,
     Block,
     If,
+    While,
 } from "./Stmt.js";
 import { Environment } from "./Environment.js";
 
@@ -203,11 +204,17 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         this.#executeBlock(stmt.statements, new Environment(this.#environment));
     }
 
-    visitIfStmt(stmt: If): void {
+    visitIfStmt(stmt: If) {
         if (this.#isTruthy(this.#evaluate(stmt.condition))) {
             this.#execute(stmt.thenBranch);
         } else if (stmt.elseBranch !== null) {
             this.#execute(stmt.elseBranch);
+        }
+    }
+
+    visitWhileStmt(stmt: While) {
+        while (this.#isTruthy(this.#evaluate(stmt.condition))) {
+            this.#execute(stmt.body);
         }
     }
 }

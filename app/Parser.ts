@@ -8,7 +8,7 @@ import {
     Unary,
     Variable,
 } from "./Expr.js";
-import { Block, Expression, If, Print, Stmt, Var } from "./Stmt.js";
+import { Block, Expression, If, Print, Stmt, Var, While } from "./Stmt.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { parseError } from "./main.js";
@@ -122,7 +122,17 @@ export class Parser {
         if (this.#match(TokenType.IF)) return this.#ifStatement();
         if (this.#match(TokenType.PRINT)) return this.#printStatement();
         if (this.#match(TokenType.LEFT_BRACE)) return new Block(this.#block());
+        if (this.#match(TokenType.WHILE)) return this.#whileStatement();
         return this.#expressionStatement();
+    }
+
+    #whileStatement(): Stmt {
+        this.#consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+        const condition = this.#expression();
+        this.#consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+        const body = this.#statement();
+
+        return new While(condition, body);
     }
 
     #ifStatement(): Stmt {
