@@ -20,6 +20,7 @@ function defineType(
     writer.write("export class " + className + " extends " + baseName + " {\n");
 
     for (const field of fieldList) {
+        if (field === "") continue;
         writer.write("    readonly " + field + ";\n");
     }
 
@@ -28,6 +29,7 @@ function defineType(
     writer.write("    constructor(" + fields + ") {\n");
     writer.write("        super()\n");
     for (const field of fieldList) {
+        if (field === "") continue;
         const name = field.split(": ")[0];
         writer.write("        this." + name + " = " + name + ";\n");
     }
@@ -109,4 +111,5 @@ defineAst(outputDir, "Stmt", [
     "Var- name: Token, initializer: Expr|null",
     "Block- statements: Array<Stmt>",
     "While- condition: Expr, body: Stmt",
+    "Break-",
 ]);

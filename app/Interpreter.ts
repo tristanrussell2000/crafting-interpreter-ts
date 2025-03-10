@@ -22,10 +22,13 @@ import {
     Block,
     If,
     While,
+    Break,
 } from "./Stmt.js";
 import { Environment } from "./Environment.js";
 
-export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
+export class Interpreter
+    implements Visitor<Object | null>, StmtVisitor<boolean>
+{
     #environment = new Environment();
 
     interpret(statements: Array<Stmt | null>) {
@@ -43,21 +46,26 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     }
 
     #execute(stmt: Stmt | null) {
-        if (stmt === null) return;
-        stmt.accept(this);
+        if (stmt === null) return true;
+        return stmt.accept(this);
     }
 
-    #executeBlock(statements: Array<Stmt>, environment: Environment) {
+    #executeBlock(statements: Array<Stmt>, environment: Environment): boolean {
         const previous = this.#environment;
         try {
             this.#environment = environment;
 
             for (const statement of statements) {
-                this.#execute(statement);
+                if (statement instanceof Break) {
+                    return false;
+                }
+                const res = this.#execute(statement);
+                if (!res) return false;
             }
         } finally {
             this.#environment = previous;
         }
+        return true;
     }
 
     #stringify(object: Object | null): string {
@@ -183,38 +191,52 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         return this.#evaluate(expr.right);
     }
 
-    visitExpressionStmt(stmt: Expression) {
+    visitExpressionStmt(stmt: Expression): boolean {
         this.#evaluate(stmt.expression);
+        return true;
     }
 
-    visitPrintStmt(stmt: Print) {
+    visitPrintStmt(stmt: Print): boolean {
         const value = this.#evaluate(stmt.expression);
         console.log(this.#stringify(value));
+        return true;
     }
 
-    visitVarStmt(stmt: Var) {
+    visitVarStmt(stmt: Var): boolean {
         let value: Object | null = null;
         if (stmt.initializer !== null) {
             value = this.#evaluate(stmt.initializer);
         }
         this.#environment.define(stmt.name.lexeme, value);
+        return true;
     }
 
-    visitBlockStmt(stmt: Block) {
-        this.#executeBlock(stmt.statements, new Environment(this.#environment));
+    visitBlockStmt(stmt: Block): boolean {
+        return this.#executeBlock(
+            stmt.statements,
+            new Environment(this.#environment)
+        );
     }
 
-    visitIfStmt(stmt: If) {
+    visitIfStmt(stmt: If): boolean {
         if (this.#isTruthy(this.#evaluate(stmt.condition))) {
-            this.#execute(stmt.thenBranch);
+            const res = this.#execute(stmt.thenBranch);
+            return res;
         } else if (stmt.elseBranch !== null) {
-            this.#execute(stmt.elseBranch);
+            return this.#execute(stmt.elseBranch);
         }
+        return true;
     }
 
-    visitWhileStmt(stmt: While) {
+    visitWhileStmt(stmt: While): boolean {
         while (this.#isTruthy(this.#evaluate(stmt.condition))) {
-            this.#execute(stmt.body);
+            const res = this.#execute(stmt.body);
+            if (!res) return true;
         }
+        return true;
+    }
+
+    visitBreakStmt(stmt: Break): boolean {
+        return false;
     }
 }

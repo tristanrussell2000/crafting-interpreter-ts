@@ -8,7 +8,16 @@ import {
     Unary,
     Variable,
 } from "./Expr.js";
-import { Block, Expression, If, Print, Stmt, Var, While } from "./Stmt.js";
+import {
+    Block,
+    Break,
+    Expression,
+    If,
+    Print,
+    Stmt,
+    Var,
+    While,
+} from "./Stmt.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
 import { parseError } from "./main.js";
@@ -90,10 +99,10 @@ export class Parser {
 
     // Parsing Grammar Functions
     // Each matches a same named operator, or one of higher precedence
-    #declaration(): Stmt | null {
+    #declaration(isLoop: boolean): Stmt | null {
         try {
             if (this.#match(TokenType.VAR)) return this.#varDeclaration();
-            return this.#statement();
+            return this.#statement(isLoop);
         } catch (error) {
             this.#synchronize();
             return null;
@@ -118,13 +127,28 @@ export class Parser {
         return new Var(name, initializer);
     }
 
-    #statement(): Stmt {
+    #statement(isLoop: boolean): Stmt {
         if (this.#match(TokenType.FOR)) return this.#forStatement();
         if (this.#match(TokenType.IF)) return this.#ifStatement();
         if (this.#match(TokenType.PRINT)) return this.#printStatement();
-        if (this.#match(TokenType.LEFT_BRACE)) return new Block(this.#block());
+        if (this.#match(TokenType.BREAK)) {
+            if (!isLoop) {
+                throw Parser.error(
+                    this.#previous(),
+                    "Break statement only allowed in loops"
+                );
+            }
+            return this.#break();
+        }
+        if (this.#match(TokenType.LEFT_BRACE))
+            return new Block(this.#block(isLoop));
         if (this.#match(TokenType.WHILE)) return this.#whileStatement();
         return this.#expressionStatement();
+    }
+
+    #break(): Stmt {
+        this.#consume(TokenType.SEMICOLON, "Expect ';' after break statement.");
+        return new Break();
     }
 
     #forStatement(): Stmt {
@@ -151,7 +175,7 @@ export class Parser {
         }
         this.#consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
 
-        let body = this.#statement();
+        let body = this.#statement(true);
 
         if (increment !== null) {
             body = new Block([body, new Expression(increment)]);
@@ -171,7 +195,7 @@ export class Parser {
         this.#consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
         const condition = this.#expression();
         this.#consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
-        const body = this.#statement();
+        const body = this.#statement(true);
 
         return new While(condition, body);
     }
@@ -181,19 +205,19 @@ export class Parser {
         const condition = this.#expression();
         this.#consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
 
-        const thenBranch = this.#statement();
+        const thenBranch = this.#statement(false);
         let elseBranch: Stmt | null = null;
         if (this.#match(TokenType.ELSE)) {
-            elseBranch = this.#statement();
+            elseBranch = this.#statement(false);
         }
         return new If(condition, thenBranch, elseBranch);
     }
 
-    #block(): Array<Stmt> {
+    #block(isLoop: boolean): Array<Stmt> {
         const statements = new Array<Stmt>();
 
         while (!this.#check(TokenType.RIGHT_BRACE) && !this.#isAtEnd()) {
-            const next = this.#declaration();
+            const next = this.#declaration(true);
             if (next) statements.push(next);
         }
 
@@ -347,7 +371,7 @@ export class Parser {
     parse(): Array<Stmt | null> {
         const statements: Array<Stmt | null> = [];
         while (!this.#isAtEnd()) {
-            statements.push(this.#declaration());
+            statements.push(this.#declaration(false));
         }
         return statements;
     }

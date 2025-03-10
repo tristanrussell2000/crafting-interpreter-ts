@@ -27,6 +27,7 @@ export default class Scanner {
         this.keywords.set("true", TokenType.TRUE);
         this.keywords.set("var", TokenType.VAR);
         this.keywords.set("while", TokenType.WHILE);
+        this.keywords.set("break", TokenType.BREAK);
     }
 
     constructor(source: string) {
