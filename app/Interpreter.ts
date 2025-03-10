@@ -4,6 +4,7 @@ import {
     Expr,
     Grouping,
     Literal,
+    Logical,
     Unary,
     Variable,
     Visitor,
@@ -166,6 +167,19 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         const value = this.#evaluate(expr.value);
         this.#environment.assign(expr.name, value);
         return value;
+    }
+
+    visitLogicalExpr(expr: Logical): Object | null {
+        const left = this.#evaluate(expr.left);
+
+        // Short-circuit
+        if (expr.operator.type === TokenType.OR) {
+            if (this.#isTruthy(left)) return left;
+        } else if (expr.operator.type === TokenType.AND) {
+            if (!this.#isTruthy(left)) return left;
+        }
+
+        return this.#evaluate(expr.right);
     }
 
     visitExpressionStmt(stmt: Expression) {

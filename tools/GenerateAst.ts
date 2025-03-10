@@ -99,6 +99,7 @@ defineAst(outputDir, "Expr", [
     "Unary- operator: Token, right: Expr",
     "Variable- name: Token",
     "Assign- name: Token, value: Expr",
+    "Logical- left: Expr, operator: Token, right: Expr",
 ]);
 
 defineAst(outputDir, "Stmt", [
