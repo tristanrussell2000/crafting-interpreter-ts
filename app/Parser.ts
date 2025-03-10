@@ -1,3 +1,4 @@
+import { stat } from "fs";
 import {
     Assign,
     Binary,
@@ -256,6 +257,17 @@ export class Parser {
 
     parse(): Array<Stmt | null> {
         const statements: Array<Stmt | null> = [];
+        while (!this.#isAtEnd()) {
+            statements.push(this.#declaration());
+        }
+        return statements;
+    }
+
+    parseRepl(): Array<Stmt | null> | Expr {
+        const statements: Array<Stmt | null> = [];
+        if (this.#tokens.at(-2)?.type !== TokenType.SEMICOLON) {
+            return this.#expression();
+        }
         while (!this.#isAtEnd()) {
             statements.push(this.#declaration());
         }

@@ -39,6 +39,24 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         }
     }
 
+    interpretRepl(statements: Array<Stmt | null> | Expr) {
+        if (statements instanceof Expr) {
+            console.log(this.#evaluate(statements));
+            return;
+        }
+        try {
+            for (const statement of statements) {
+                this.#execute(statement);
+            }
+        } catch (error) {
+            if (error instanceof RuntimeError) {
+                runtimeError(error);
+            } else {
+                console.error(error);
+            }
+        }
+    }
+
     #execute(stmt: Stmt | null) {
         if (stmt === null) return;
         stmt.accept(this);

@@ -26,7 +26,7 @@ async function runPrompt() {
     while (true) {
         const line = await rl.question("> ");
         if (line == null) break;
-        run(line);
+        runRepl(line);
         hadError = false;
     }
 }
@@ -36,9 +36,16 @@ function run(source: string) {
     const tokens: Array<Token> = scanner.scanTokens();
     const parser = new Parser(tokens);
     const statements = parser.parse();
-    if (statements === null) return;
 
     interpreter.interpret(statements);
+}
+
+function runRepl(source: string) {
+    const scanner: Scanner = new Scanner(source);
+    const tokens: Array<Token> = scanner.scanTokens();
+    const parser = new Parser(tokens);
+    const statementsOrExpr = parser.parseRepl();
+    interpreter.interpretRepl(statementsOrExpr);
 }
 
 export function error(line: number, message: string, character?: string) {
