@@ -100,6 +100,7 @@ defineAst(outputDir, "Expr", [
     "Variable- name: Token",
     "Assign- name: Token, value: Expr",
     "Logical- left: Expr, operator: Token, right: Expr",
+    "Call- callee: Expr, paren: Token, args: Array<Expr>",
 ]);
 
 defineAst(outputDir, "Stmt", [
@@ -109,4 +110,5 @@ defineAst(outputDir, "Stmt", [
     "Var- name: Token, initializer: Expr|null",
     "Block- statements: Array<Stmt>",
     "While- condition: Expr, body: Stmt",
+    "Function- name: Token, params: Array<Token>, body: Array<Stmt>",
 ]);

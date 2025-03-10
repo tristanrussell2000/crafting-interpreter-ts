@@ -12,6 +12,7 @@ export interface Visitor<R> {
   visitVarStmt(stmt: Var): R;
   visitBlockStmt(stmt: Block): R;
   visitWhileStmt(stmt: While): R;
+  visitFunctionStmt(stmt: Function): R;
 }
 
 export class Expression extends Stmt {
@@ -92,6 +93,22 @@ export class While extends Stmt {
 
     accept<R>(visitor: Visitor<R>): R {
         return visitor.visitWhileStmt(this);
+    }
+}
+export class Function extends Stmt {
+    readonly name: Token;
+    readonly params: Array<Token>;
+    readonly body: Array<Stmt>;
+
+    constructor(name: Token, params: Array<Token>, body: Array<Stmt>) {
+        super()
+        this.name = name;
+        this.params = params;
+        this.body = body;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitFunctionStmt(this);
     }
 }
 

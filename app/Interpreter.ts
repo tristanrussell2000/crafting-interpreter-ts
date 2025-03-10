@@ -1,6 +1,7 @@
 import {
     Assign,
     Binary,
+    Call,
     Expr,
     Grouping,
     Literal,
@@ -22,11 +23,34 @@ import {
     Block,
     If,
     While,
+    Function,
 } from "./Stmt.js";
 import { Environment } from "./Environment.js";
+import { LoxCallable, isLoxCallable } from "./LoxCallable.js";
+import { LoxFunction } from "./LoxFunction.js";
 
 export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
-    #environment = new Environment();
+    readonly globals = new Environment();
+    #environment = this.globals;
+
+    constructor() {
+        const clock: LoxCallable = {
+            arity: function (): number {
+                return 0;
+            },
+
+            call: function (
+                interpreter: Interpreter,
+                args: Array<Object | null>
+            ): Object | null {
+                return Date.now();
+            },
+        };
+        Object.getPrototypeOf(clock).toString = function () {
+            return "<native fn>";
+        };
+        this.globals.define("clock", clock);
+    }
 
     interpret(statements: Array<Stmt | null>) {
         try {
@@ -47,7 +71,7 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         stmt.accept(this);
     }
 
-    #executeBlock(statements: Array<Stmt>, environment: Environment) {
+    executeBlock(statements: Array<Stmt>, environment: Environment) {
         const previous = this.#environment;
         try {
             this.#environment = environment;
@@ -183,6 +207,35 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         return this.#evaluate(expr.right);
     }
 
+    visitCallExpr(expr: Call): Object | null {
+        const callee = this.#evaluate(expr.callee);
+        if (!isLoxCallable(callee)) {
+            throw new RuntimeError(
+                expr.paren,
+                "Can only call functions and classes."
+            );
+        }
+
+        const args = new Array<Object | null>();
+        for (const arg of expr.args) {
+            args.push(this.#evaluate(arg));
+        }
+
+        if (args.length != callee.arity()) {
+            throw new RuntimeError(
+                expr.paren,
+                `Expected ${callee.arity()} arguments but got ${args.length}.`
+            );
+        }
+
+        return callee.call(this, args);
+    }
+
+    visitFunctionStmt(stmt: Function): void {
+        const func = new LoxFunction(stmt);
+        this.#environment.define(stmt.name.lexeme, func);
+    }
+
     visitExpressionStmt(stmt: Expression) {
         this.#evaluate(stmt.expression);
     }
@@ -201,7 +254,7 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     }
 
     visitBlockStmt(stmt: Block) {
-        this.#executeBlock(stmt.statements, new Environment(this.#environment));
+        this.executeBlock(stmt.statements, new Environment(this.#environment));
     }
 
     visitIfStmt(stmt: If) {
