@@ -1,19 +1,8 @@
-var i3 = 0;
-var i5 = 0;
-var j = 0;
-while (j < 100) {
-    print j;
-    var out = "";
-    if (i3 == 3) {
-        out = out + "Fizz";
-        i3 = 0;
-    }
-    if (i5 == 5) {
-        out = out + "Buzz";
-        i5 = 0;
-    }
-    if (out != "") print out;
-    j = j + 1;
-    i3 = i3 + 1;
-    i5 = i5 + 1;
+var a = 0;
+var temp;
+
+for (var b = 1; a < 10000; b = temp + b) {
+  print a;
+  temp = a;
+  a = b;
 }
