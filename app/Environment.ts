@@ -14,9 +14,9 @@ export class Environment {
         this.#values.set(name, value);
     }
 
-    get(name: Token): Object {
+    get(name: Token): Object | null {
         const val = this.#values.get(name.lexeme);
-        if (val) return val;
+        if (val !== undefined) return val;
         if (this.enclosing !== null) return this.enclosing.get(name);
 
         throw new RuntimeError(
