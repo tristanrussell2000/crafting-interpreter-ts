@@ -3,6 +3,7 @@ import {
     Binary,
     Call,
     Expr,
+    FunctionExpr,
     Grouping,
     Literal,
     Logical,
@@ -236,6 +237,10 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     visitFunctionStmt(stmt: Function): void {
         const func = new LoxFunction(stmt, this.#environment);
         this.#environment.define(stmt.name.lexeme, func);
+    }
+
+    visitFunctionExprExpr(expr: FunctionExpr): Object | null {
+        return new LoxFunction(expr, this.#environment);
     }
 
     visitReturnStmt(stmt: Return): void {

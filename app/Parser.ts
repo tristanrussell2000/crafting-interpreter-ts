@@ -8,6 +8,7 @@ import {
     Logical,
     Unary,
     Variable,
+    FunctionExpr,
 } from "./Expr.js";
 import {
     Block,
@@ -41,6 +42,11 @@ export class Parser {
         return this.#tokens[this.#current];
     }
 
+    #peekAhead(): Token | false {
+        if (!this.#isAtEnd()) return this.#tokens[this.#current + 1];
+        else return false;
+    }
+
     #previous(): Token {
         return this.#tokens[this.#current - 1];
     }
@@ -54,6 +60,12 @@ export class Parser {
     #check(type: TokenType): boolean {
         if (this.#isAtEnd()) return false;
         return this.#peek().type === type;
+    }
+
+    #checkAhead(type: TokenType): boolean {
+        const ahead = this.#peekAhead();
+        if (ahead) return ahead.type === type;
+        return false;
     }
 
     // Advances if next token is one of passed types, otherwise returns false
@@ -103,7 +115,14 @@ export class Parser {
     // Each matches a same named operator, or one of higher precedence
     #declaration(): Stmt | null {
         try {
-            if (this.#match(TokenType.FUN)) return this.#function("function");
+            // Function declaration must have name
+            if (
+                this.#check(TokenType.FUN) &&
+                !this.#checkAhead(TokenType.LEFT_PAREN)
+            ) {
+                this.#advance();
+                return this.#function("function");
+            }
             if (this.#match(TokenType.VAR)) return this.#varDeclaration();
             return this.#statement();
         } catch (error) {
@@ -410,6 +429,13 @@ export class Parser {
     }
 
     #primary(): Expr {
+        if (
+            this.#check(TokenType.FUN) &&
+            this.#checkAhead(TokenType.LEFT_PAREN)
+        ) {
+            this.#advance();
+            return this.#functionExpr();
+        }
         if (this.#match(TokenType.FALSE)) return new Literal(false);
         if (this.#match(TokenType.TRUE)) return new Literal(true);
         if (this.#match(TokenType.NIL)) return new Literal(null);
@@ -432,6 +458,32 @@ export class Parser {
         }
 
         throw Parser.error(this.#peek(), "Expect expression.");
+    }
+
+    #functionExpr(): Expr {
+        this.#consume(TokenType.LEFT_PAREN, `Expect '(' after lambda fun`);
+        const parameters = new Array<Token>();
+        if (!this.#check(TokenType.RIGHT_PAREN)) {
+            do {
+                if (parameters.length >= 255) {
+                    parseError(
+                        this.#peek(),
+                        "Can't have more then 255 parameters."
+                    );
+                }
+                parameters.push(
+                    this.#consume(
+                        TokenType.IDENTIFIER,
+                        "Expect parameter name."
+                    )
+                );
+            } while (this.#match(TokenType.COMMA));
+        }
+        this.#consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+        this.#consume(TokenType.LEFT_BRACE, `Expect '{' before lambda body.`);
+        const body = this.#block();
+        return new FunctionExpr(parameters, body);
     }
 
     parse(): Array<Stmt | null> {

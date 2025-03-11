@@ -1,4 +1,6 @@
 import Token from "./Token.js";
+import { Stmt } from './Stmt.js';
+
 export abstract class Expr{
   abstract accept<R>(visitor: Visitor<R>): R;
 }
@@ -12,6 +14,7 @@ export interface Visitor<R> {
   visitAssignExpr(expr: Assign): R;
   visitLogicalExpr(expr: Logical): R;
   visitCallExpr(expr: Call): R;
+  visitFunctionExprExpr(expr: FunctionExpr): R;
 }
 
 export class Binary extends Expr {
@@ -124,6 +127,20 @@ export class Call extends Expr {
 
     accept<R>(visitor: Visitor<R>): R {
         return visitor.visitCallExpr(this);
+    }
+}
+export class FunctionExpr extends Expr {
+    readonly params: Array<Token>;
+    readonly body: Array<Stmt>;
+
+    constructor(params: Array<Token>, body: Array<Stmt>) {
+        super()
+        this.params = params;
+        this.body = body;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitFunctionExprExpr(this);
     }
 }
 

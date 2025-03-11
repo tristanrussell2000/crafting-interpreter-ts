@@ -1,14 +1,18 @@
 import { Environment } from "./Environment.js";
+import { FunctionExpr } from "./Expr.js";
 import { Interpreter } from "./Interpreter.js";
 import { LoxCallable } from "./LoxCallable.js";
 import { ReturnException } from "./ReturnException.js";
 import { Stmt, Function as StmtFunction } from "./Stmt.js";
 
 export class LoxFunction implements LoxCallable {
-    readonly #declaration: StmtFunction;
+    readonly #declaration: StmtFunction | FunctionExpr;
     readonly #closure: Environment;
 
-    constructor(declaration: StmtFunction, closure: Environment) {
+    constructor(
+        declaration: StmtFunction | FunctionExpr,
+        closure: Environment
+    ) {
         this.#declaration = declaration;
         this.#closure = closure;
     }
@@ -34,6 +38,8 @@ export class LoxFunction implements LoxCallable {
     }
 
     toString(): string {
-        return `<fn ${this.#declaration.name.lexeme} >`;
+        if (this.#declaration instanceof StmtFunction)
+            return `<fn ${this.#declaration.name.lexeme} >`;
+        else return "<fn lambda>";
     }
 }

@@ -74,6 +74,8 @@ function defineAst(outputDir: string, baseName: string, types: Array<string>) {
     writer.write('import Token from "./Token.js";\n');
     if (baseName != "Expr")
         writer.write("import { Expr } from './Expr.js';\n\n");
+    if (baseName != "Stmt")
+        writer.write("import { Stmt } from './Stmt.js';\n\n");
 
     writer.write("export abstract class " + baseName + "{\n");
     writer.write("  abstract accept<R>(visitor: Visitor<R>): R;\n");
@@ -101,6 +103,7 @@ defineAst(outputDir, "Expr", [
     "Assign- name: Token, value: Expr",
     "Logical- left: Expr, operator: Token, right: Expr",
     "Call- callee: Expr, paren: Token, args: Array<Expr>",
+    "FunctionExpr- params: Array<Token>, body: Array<Stmt>",
 ]);
 
 defineAst(outputDir, "Stmt", [
