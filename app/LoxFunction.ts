@@ -1,6 +1,7 @@
 import { Environment } from "./Environment.js";
 import { Interpreter } from "./Interpreter.js";
 import { LoxCallable } from "./LoxCallable.js";
+import { ReturnException } from "./ReturnException.js";
 import { Stmt, Function as StmtFunction } from "./Stmt.js";
 
 export class LoxFunction implements LoxCallable {
@@ -15,7 +16,14 @@ export class LoxFunction implements LoxCallable {
         for (let i = 0; i < this.#declaration.params.length; i++) {
             environment.define(this.#declaration.params[i].lexeme, args[i]);
         }
-        interpreter.executeBlock(this.#declaration.body, environment);
+        try {
+            interpreter.executeBlock(this.#declaration.body, environment);
+        } catch (error) {
+            if (error instanceof ReturnException) {
+                return error.value;
+            }
+            throw error;
+        }
         return null;
     }
 

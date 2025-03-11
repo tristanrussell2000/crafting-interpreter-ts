@@ -24,10 +24,12 @@ import {
     If,
     While,
     Function,
+    Return,
 } from "./Stmt.js";
 import { Environment } from "./Environment.js";
 import { LoxCallable, isLoxCallable } from "./LoxCallable.js";
 import { LoxFunction } from "./LoxFunction.js";
+import { ReturnException } from "./ReturnException.js";
 
 export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     readonly globals = new Environment();
@@ -234,6 +236,13 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     visitFunctionStmt(stmt: Function): void {
         const func = new LoxFunction(stmt);
         this.#environment.define(stmt.name.lexeme, func);
+    }
+
+    visitReturnStmt(stmt: Return): void {
+        let value: Object | null = null;
+        if (stmt.value !== null) value = this.#evaluate(stmt.value);
+
+        throw new ReturnException(value);
     }
 
     visitExpressionStmt(stmt: Expression) {

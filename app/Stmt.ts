@@ -13,6 +13,7 @@ export interface Visitor<R> {
   visitBlockStmt(stmt: Block): R;
   visitWhileStmt(stmt: While): R;
   visitFunctionStmt(stmt: Function): R;
+  visitReturnStmt(stmt: Return): R;
 }
 
 export class Expression extends Stmt {
@@ -109,6 +110,20 @@ export class Function extends Stmt {
 
     accept<R>(visitor: Visitor<R>): R {
         return visitor.visitFunctionStmt(this);
+    }
+}
+export class Return extends Stmt {
+    readonly keyword: Token;
+    readonly value: Expr | null;
+
+    constructor(keyword: Token, value: Expr | null) {
+        super()
+        this.keyword = keyword;
+        this.value = value;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitReturnStmt(this);
     }
 }
 

@@ -18,6 +18,7 @@ import {
     Var,
     While,
     Function as StmtFunction,
+    Return,
 } from "./Stmt.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
@@ -166,7 +167,19 @@ export class Parser {
         if (this.#match(TokenType.PRINT)) return this.#printStatement();
         if (this.#match(TokenType.LEFT_BRACE)) return new Block(this.#block());
         if (this.#match(TokenType.WHILE)) return this.#whileStatement();
+        if (this.#match(TokenType.RETURN)) return this.#returnStatement();
         return this.#expressionStatement();
+    }
+
+    #returnStatement(): Stmt {
+        const keyword = this.#previous();
+        let value: Expr | null = null;
+        if (!this.#check(TokenType.SEMICOLON)) {
+            value = this.#expression();
+        }
+
+        this.#consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+        return new Return(keyword, value);
     }
 
     #forStatement(): Stmt {
