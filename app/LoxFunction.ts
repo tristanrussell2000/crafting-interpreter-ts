@@ -6,13 +6,15 @@ import { Stmt, Function as StmtFunction } from "./Stmt.js";
 
 export class LoxFunction implements LoxCallable {
     readonly #declaration: StmtFunction;
+    readonly #closure: Environment;
 
-    constructor(declaration: StmtFunction) {
+    constructor(declaration: StmtFunction, closure: Environment) {
         this.#declaration = declaration;
+        this.#closure = closure;
     }
 
     call(interpreter: Interpreter, args: Array<Object | null>): Object | null {
-        const environment = new Environment(interpreter.globals);
+        const environment = new Environment(this.#closure);
         for (let i = 0; i < this.#declaration.params.length; i++) {
             environment.define(this.#declaration.params[i].lexeme, args[i]);
         }
