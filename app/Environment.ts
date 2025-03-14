@@ -1,4 +1,3 @@
-import { error, parseError } from "./main.js";
 import { RuntimeError } from "./RuntimeError.js";
 import Token from "./Token.js";
 

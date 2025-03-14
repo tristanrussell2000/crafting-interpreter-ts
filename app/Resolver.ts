@@ -29,7 +29,7 @@ import Token from "./Token.js";
 export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     readonly #interpreter: Interpreter;
     // False marks variable delcaration not ready yet
-    readonly #scopes: Array<Map<string, boolean>> = [];
+    readonly #scopes: Array<Map<string, [Token | null, boolean]>> = [];
     #currentFunction = FunctionType.NONE;
 
     constructor(interpreter: Interpreter) {
@@ -52,6 +52,12 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     }
 
     #endScope() {
+        this.#scopes.at(-1)?.forEach((value, key) => {
+            if (!value[1]) {
+                if (value[0] === null) throw new Error("Variable declared but not defined.")
+                parseError(value[0], "Local variable not used.");
+            }
+        });
         this.#scopes.pop();
     }
 
@@ -67,12 +73,12 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
             );
         }
 
-        scope?.set(name.lexeme, false);
+        scope?.set(name.lexeme, [null, false],);
     }
 
     #define(name: Token) {
         if (this.#scopes.length === 0) return;
-        this.#scopes.at(-1)?.set(name.lexeme, true);
+        this.#scopes.at(-1)?.set(name.lexeme, [name, false]);
     }
 
     #resolveFunction(func: StmtFunction, type: FunctionType) {
@@ -88,9 +94,10 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
         this.#currentFunction = enclosingFunction;
     }
 
-    #resolveLocal<T extends { name: Token } & Expr>(expr: T) {
+    #resolveLocal(expr: Variable | Assign) {
         for (let i = this.#scopes.length - 1; i >= 0; i--) {
             if (this.#scopes.at(i)?.has(expr.name.lexeme)) {
+                this.#scopes.at(i)!.get(expr.name.lexeme)![1] = true;
                 this.#interpreter.resolve(expr, this.#scopes.length - 1 - i);
                 return;
             }
@@ -114,7 +121,7 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     visitVariableExpr(expr: Variable): void {
         if (
             this.#scopes.length !== 0 &&
-            this.#scopes.at(-1)?.get(expr.name.lexeme) === false
+            this.#scopes.at(-1)?.get(expr.name.lexeme)?.[0] === null
         ) {
             parseError(
                 expr.name,
