@@ -6,6 +6,7 @@ import TokenType from "./TokenType.js";
 import { Parser } from "./Parser.js";
 import { RuntimeError } from "./RuntimeError.js";
 import { Interpreter } from "./Interpreter.js";
+import { Resolver } from "./Resolver.js";
 
 const interpreter = new Interpreter();
 let hadError = false;
@@ -37,7 +38,10 @@ function run(source: string) {
     const parser = new Parser(tokens);
     const statements = parser.parse();
     if (statements === null) return;
-
+    if (hadError) return;
+    const resolver = new Resolver(interpreter);
+    resolver.resolveStatements(statements);
+    if (hadError) return;
     interpreter.interpret(statements);
 }
 

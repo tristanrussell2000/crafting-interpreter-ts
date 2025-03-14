@@ -1,3 +1,4 @@
+import { error, parseError } from "./main.js";
 import { RuntimeError } from "./RuntimeError.js";
 import Token from "./Token.js";
 
@@ -40,5 +41,22 @@ export class Environment {
             name,
             "Undefined variable '" + name.lexeme + "'."
         );
+    }
+
+    getAt(distance: number, name: string): Object | null {
+        return this.ancestor(distance).#values.get(name) ?? null;
+    }
+
+    ancestor(distance: number): Environment {
+        let environment: Environment | null = this;
+        for (let i = 0; i < distance; i++) {
+            environment = environment?.enclosing ?? null;
+        }
+        if (environment === null) throw new Error("Error resolving variable.");
+        return environment;
+    }
+
+    assignAt(distance: number, name: Token, value: Object | null) {
+        this.ancestor(distance).#values.set(name.lexeme, value);
     }
 }
