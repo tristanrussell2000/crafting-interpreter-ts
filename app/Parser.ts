@@ -108,7 +108,7 @@ export class Parser {
     #declaration(): Stmt | null {
         try {
             if (this.#match(TokenType.CLASS)) return this.#classDeclaration();
-            if (this.#match(TokenType.FUN)) return this.#function("function");
+            if (this.#match(TokenType.FUN)) return this.#function();
             if (this.#match(TokenType.VAR)) return this.#varDeclaration();
             return this.#statement();
         } catch (error) {
@@ -123,7 +123,7 @@ export class Parser {
 
         const methods: Array<StmtFunction> = [];
         while (!this.#check(TokenType.RIGHT_BRACE) && !this.#isAtEnd()) {
-            methods.push(this.#function("method"))
+            methods.push(this.#method())
         }
 
         this.#consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
@@ -132,12 +132,12 @@ export class Parser {
     }
 
     // Kind param so both functions and methods can use this helper
-    #function(kind: string): StmtFunction {
+    #function(): StmtFunction {
         const name = this.#consume(
             TokenType.IDENTIFIER,
-            `Expect ${kind} name.`
+            `Expect function name.`
         );
-        this.#consume(TokenType.LEFT_PAREN, `Expect '(' after ${kind} name.`);
+        this.#consume(TokenType.LEFT_PAREN, `Expect '(' after function name.`);
         const parameters = new Array<Token>();
         if (!this.#check(TokenType.RIGHT_PAREN)) {
             do {
@@ -157,9 +157,34 @@ export class Parser {
         }
         this.#consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
 
-        this.#consume(TokenType.LEFT_BRACE, `Expect '{' before ${kind} body.`);
+        this.#consume(TokenType.LEFT_BRACE, `Expect '{' before function body.`);
         const body = this.#block();
-        return new StmtFunction(name, parameters, body);
+        return new StmtFunction(name, parameters, body, false);
+    }
+
+    #method(): StmtFunction {
+        const name = this.#consume(TokenType.IDENTIFIER, "Expect method name.");
+        const parameters = new Array<Token>();
+        let isGetter = false;
+
+        if (this.#match(TokenType.LEFT_PAREN)) {
+            if (!this.#check(TokenType.RIGHT_PAREN)) {
+                do {
+                    if (parameters.length >= 255) {
+                        parseError(this.#peek(), "can't have more than 255 parameters.");
+                    }
+                    parameters.push(this.#consume(TokenType.IDENTIFIER, "Expect parameter name."));
+                } while (this.#match(TokenType.COMMA));
+            }
+            this.#consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+        } else {
+            isGetter = true;
+        }
+
+        this.#consume(TokenType.LEFT_BRACE, "Expect '{' before method body.");
+        const body = this.#block();
+        return new StmtFunction(name, parameters, body, isGetter);
+
     }
 
     #varDeclaration(): Stmt {

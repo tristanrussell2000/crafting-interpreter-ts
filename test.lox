@@ -1,7 +1,6 @@
 class Cake {
-  init() {
-    this.flavor = "Devils chocolate";
-    return "Test";
+  flavor {
+    return "chocolate";
   }
   taste() {
     var adj = "delicious";

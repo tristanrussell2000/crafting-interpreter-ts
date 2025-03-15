@@ -113,7 +113,7 @@ defineAst(outputDir, "Stmt", [
     "Var- name: Token, initializer: Expr|null",
     "Block- statements: Array<Stmt>",
     "While- condition: Expr, body: Stmt",
-    "Function- name: Token, params: Array<Token>, body: Array<Stmt>",
+    "Function- name: Token, params: Array<Token>, body: Array<Stmt>, isGetter: boolean",
     "Return- keyword: Token, value: Expr | null",
     "Class- name: Token, methods: Array<Function>"
 ]);

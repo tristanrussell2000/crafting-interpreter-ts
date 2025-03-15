@@ -259,7 +259,7 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     }
 
     visitFunctionStmt(stmt: Function): void {
-        const func = new LoxFunction(stmt, this.#environment, false);
+        const func = new LoxFunction(stmt, this.#environment, false, false);
         this.#environment.define(stmt.name.lexeme, func);
     }
 
@@ -309,7 +309,7 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         this.#environment.define(stmt.name.lexeme, null);
         const methods: Map<string, LoxFunction> = new Map();
         for (const method of stmt.methods) {
-            const func = new LoxFunction(method, this.#environment, method.name.lexeme === "init");
+            const func = new LoxFunction(method, this.#environment, method.name.lexeme === "init", method.isGetter);
             methods.set(method.name.lexeme, func);
         }
         const klass: LoxClass = new LoxClass(stmt.name.lexeme, methods);
@@ -319,7 +319,11 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     visitGetExpr(expr: Get): Object | null {
         const obj = this.#evaluate(expr.obj);
         if (obj instanceof LoxInstance) {
-            return obj.get(expr.name);
+            let res = obj.get(expr.name);
+            if (res instanceof LoxFunction && res.isGetter()) {
+                res = res.call(this, []);
+            }
+            return res;
         }
         throw new RuntimeError(expr.name, "Only instances have properties.");
     }

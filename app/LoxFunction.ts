@@ -9,17 +9,21 @@ export class LoxFunction implements LoxCallable {
     readonly #declaration: StmtFunction;
     readonly #closure: Environment;
     readonly #isInitializer: boolean;
+    readonly #isGetter: boolean;
 
-    constructor(declaration: StmtFunction, closure: Environment, isInitializer: boolean) {
+    constructor(declaration: StmtFunction, closure: Environment, isInitializer: boolean, isGetter: boolean) {
         this.#declaration = declaration;
         this.#closure = closure;
         this.#isInitializer = isInitializer;
+        this.#isGetter = isGetter;
     }
 
     call(interpreter: Interpreter, args: Array<Object | null>): Object | null {
         const environment = new Environment(this.#closure);
-        for (let i = 0; i < this.#declaration.params.length; i++) {
-            environment.define(this.#declaration.params[i].lexeme, args[i]);
+        if (this.#declaration instanceof StmtFunction) {
+            for (let i = 0; i < this.#declaration.params.length; i++) {
+                environment.define(this.#declaration.params[i].lexeme, args[i]);
+            }
         }
         try {
             interpreter.executeBlock(this.#declaration.body, environment);
@@ -37,11 +41,15 @@ export class LoxFunction implements LoxCallable {
     bind(instance: LoxInstance) {
         const environment = new Environment(this.#closure);
         environment.define("this", instance);
-        return new LoxFunction(this.#declaration, environment, this.#isInitializer);
+        return new LoxFunction(this.#declaration, environment, this.#isInitializer, this.#isGetter);
+    }
+
+    isGetter(): boolean {
+        return this.#isGetter;
     }
 
     arity(): number {
-        return this.#declaration.params.length;
+        return (this.#declaration instanceof StmtFunction) ? this.#declaration.params.length : 0;
     }
 
     toString(): string {

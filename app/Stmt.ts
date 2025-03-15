@@ -101,12 +101,14 @@ export class Function extends Stmt {
     readonly name: Token;
     readonly params: Array<Token>;
     readonly body: Array<Stmt>;
+    readonly isGetter: boolean;
 
-    constructor(name: Token, params: Array<Token>, body: Array<Stmt>) {
+    constructor(name: Token, params: Array<Token>, body: Array<Stmt>, isGetter: boolean) {
         super()
         this.name = name;
         this.params = params;
         this.body = body;
+        this.isGetter = isGetter;
     }
 
     accept<R>(visitor: Visitor<R>): R {
