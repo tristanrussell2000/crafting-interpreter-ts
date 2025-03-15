@@ -2,6 +2,7 @@ import { Environment } from "./Environment.js";
 import { Interpreter } from "./Interpreter.js";
 import { LoxCallable } from "./LoxCallable.js";
 import { LoxInstance } from "./LoxInstance.js";
+import { FunctionType } from "./Resolver.js";
 import { ReturnException } from "./ReturnException.js";
 import { Stmt, Function as StmtFunction } from "./Stmt.js";
 
@@ -9,13 +10,13 @@ export class LoxFunction implements LoxCallable {
     readonly #declaration: StmtFunction;
     readonly #closure: Environment;
     readonly #isInitializer: boolean;
-    readonly #isGetter: boolean;
+    readonly #functionType: FunctionType;
 
-    constructor(declaration: StmtFunction, closure: Environment, isInitializer: boolean, isGetter: boolean) {
+    constructor(declaration: StmtFunction, closure: Environment, isInitializer: boolean, functionType: FunctionType) {
         this.#declaration = declaration;
         this.#closure = closure;
         this.#isInitializer = isInitializer;
-        this.#isGetter = isGetter;
+        this.#functionType = functionType;
     }
 
     call(interpreter: Interpreter, args: Array<Object | null>): Object | null {
@@ -41,11 +42,11 @@ export class LoxFunction implements LoxCallable {
     bind(instance: LoxInstance) {
         const environment = new Environment(this.#closure);
         environment.define("this", instance);
-        return new LoxFunction(this.#declaration, environment, this.#isInitializer, this.#isGetter);
+        return new LoxFunction(this.#declaration, environment, this.#isInitializer, this.#functionType);
     }
 
-    isGetter(): boolean {
-        return this.#isGetter;
+    getFunctionType(): FunctionType {
+        return this.#functionType;
     }
 
     arity(): number {

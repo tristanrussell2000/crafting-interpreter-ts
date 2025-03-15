@@ -72,6 +72,7 @@ function defineAst(outputDir: string, baseName: string, types: Array<string>) {
     const writer = fs.createWriteStream(path);
 
     writer.write('import Token from "./Token.js";\n');
+    writer.write('import { FunctionType } from "./Resolver.js";\n');
     if (baseName != "Expr")
         writer.write("import { Expr } from './Expr.js';\n\n");
 
@@ -113,7 +114,7 @@ defineAst(outputDir, "Stmt", [
     "Var- name: Token, initializer: Expr|null",
     "Block- statements: Array<Stmt>",
     "While- condition: Expr, body: Stmt",
-    "Function- name: Token, params: Array<Token>, body: Array<Stmt>, isGetter: boolean",
+    "Function- name: Token, params: Array<Token>, body: Array<Stmt>, type: FunctionType",
     "Return- keyword: Token, value: Expr | null",
     "Class- name: Token, methods: Array<Function>"
 ]);

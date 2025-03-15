@@ -1,4 +1,5 @@
 import Token from "./Token.js";
+import { FunctionType } from "./Resolver.js";
 import { Expr } from './Expr.js';
 
 export abstract class Stmt{
@@ -101,14 +102,14 @@ export class Function extends Stmt {
     readonly name: Token;
     readonly params: Array<Token>;
     readonly body: Array<Stmt>;
-    readonly isGetter: boolean;
+    readonly type: FunctionType;
 
-    constructor(name: Token, params: Array<Token>, body: Array<Stmt>, isGetter: boolean) {
+    constructor(name: Token, params: Array<Token>, body: Array<Stmt>, type: FunctionType) {
         super()
         this.name = name;
         this.params = params;
         this.body = body;
-        this.isGetter = isGetter;
+        this.type = type;
     }
 
     accept<R>(visitor: Visitor<R>): R {

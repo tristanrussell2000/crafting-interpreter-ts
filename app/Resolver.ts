@@ -238,11 +238,13 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     }
 }
 
-enum FunctionType {
+export enum FunctionType {
     NONE,
     FUNCTION,
     METHOD,
-    INITIALIZER
+    INITIALIZER,
+    GETTER,
+    STATIC
 }
 
 enum ClassType {

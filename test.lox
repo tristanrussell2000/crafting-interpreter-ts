@@ -1,12 +1,7 @@
-class Cake {
-  flavor {
-    return "chocolate";
-  }
-  taste() {
-    var adj = "delicious";
-    print "The " + this.flavor + " cake is " + adj + "!";
+class Math {
+  class square(n) {
+    return n * n;
   }
 }
 
-var cake = Cake();
-cake.taste();
+print Math.square(3);

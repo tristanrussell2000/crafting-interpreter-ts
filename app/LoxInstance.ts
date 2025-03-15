@@ -3,10 +3,14 @@ import { RuntimeError } from "./RuntimeError.js";
 import Token from "./Token.js";
 
 export class LoxInstance {
-    #klass: LoxClass
+    #klass: LoxClass | undefined
     readonly #fields: Map<string, Object | null> = new Map();
 
-    constructor(klass: LoxClass) {
+    constructor(klass?: LoxClass) {
+        this.#klass = klass;
+    }
+
+    setClass(klass: LoxClass) {
         this.#klass = klass;
     }
 
@@ -15,8 +19,8 @@ export class LoxInstance {
             return this.#fields.get(name.lexeme)!;
         }
 
-        const method = this.#klass.findMethod(name.lexeme);
-        if (method !== null) {
+        const method = this.#klass?.findMethod(name.lexeme);
+        if (method) {
             return method.bind(this);
         }
 
@@ -28,6 +32,6 @@ export class LoxInstance {
     }
 
     toString(): string {
-        return this.#klass.name + " instance";
+        return this.#klass?.name + " instance";
     }
 }

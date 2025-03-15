@@ -36,6 +36,7 @@ import { LoxFunction } from "./LoxFunction.js";
 import { ReturnException } from "./ReturnException.js";
 import { LoxClass } from "./LoxClass.js";
 import { LoxInstance } from "./LoxInstance.js";
+import { FunctionType } from "./Resolver.js";
 
 export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     readonly globals = new Environment();
@@ -259,7 +260,7 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     }
 
     visitFunctionStmt(stmt: Function): void {
-        const func = new LoxFunction(stmt, this.#environment, false, false);
+        const func = new LoxFunction(stmt, this.#environment, false, FunctionType.FUNCTION);
         this.#environment.define(stmt.name.lexeme, func);
     }
 
@@ -309,7 +310,7 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         this.#environment.define(stmt.name.lexeme, null);
         const methods: Map<string, LoxFunction> = new Map();
         for (const method of stmt.methods) {
-            const func = new LoxFunction(method, this.#environment, method.name.lexeme === "init", method.isGetter);
+            const func = new LoxFunction(method, this.#environment, method.name.lexeme === "init", method.type);
             methods.set(method.name.lexeme, func);
         }
         const klass: LoxClass = new LoxClass(stmt.name.lexeme, methods);
@@ -320,7 +321,7 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         const obj = this.#evaluate(expr.obj);
         if (obj instanceof LoxInstance) {
             let res = obj.get(expr.name);
-            if (res instanceof LoxFunction && res.isGetter()) {
+            if (res instanceof LoxFunction && res.getFunctionType() === FunctionType.GETTER) {
                 res = res.call(this, []);
             }
             return res;

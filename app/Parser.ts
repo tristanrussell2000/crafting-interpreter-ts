@@ -12,6 +12,7 @@ import {
     Variable,
     This,
 } from "./Expr.js";
+import { FunctionType } from "./Resolver.js";
 import {
     Block,
     Expression,
@@ -159,10 +160,14 @@ export class Parser {
 
         this.#consume(TokenType.LEFT_BRACE, `Expect '{' before function body.`);
         const body = this.#block();
-        return new StmtFunction(name, parameters, body, false);
+        return new StmtFunction(name, parameters, body, FunctionType.FUNCTION);
     }
 
     #method(): StmtFunction {
+        let type = FunctionType.FUNCTION;
+        if (this.#match(TokenType.CLASS)) {
+            type = FunctionType.STATIC;
+        }
         const name = this.#consume(TokenType.IDENTIFIER, "Expect method name.");
         const parameters = new Array<Token>();
         let isGetter = false;
@@ -183,8 +188,7 @@ export class Parser {
 
         this.#consume(TokenType.LEFT_BRACE, "Expect '{' before method body.");
         const body = this.#block();
-        return new StmtFunction(name, parameters, body, isGetter);
-
+        return new StmtFunction(name, parameters, body, type);
     }
 
     #varDeclaration(): Stmt {
