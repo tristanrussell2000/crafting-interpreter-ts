@@ -73,7 +73,7 @@ function defineAst(outputDir: string, baseName: string, types: Array<string>) {
 
     writer.write('import Token from "./Token.js";\n');
     if (baseName != "Expr")
-        writer.write("import { Expr } from './Expr.js';\n\n");
+        writer.write("import { Expr, Variable } from './Expr.js';\n\n");
 
     writer.write("export abstract class " + baseName + "{\n");
     writer.write("  abstract accept<R>(visitor: Visitor<R>): R;\n");
@@ -103,7 +103,8 @@ defineAst(outputDir, "Expr", [
     "Call- callee: Expr, paren: Token, args: Array<Expr>",
     "Get- obj: Expr, name: Token",
     "Set- obj: Expr, name: Token, value: Expr",
-    "This- name: Token"
+    "This- name: Token",
+    "Super- name: Token, method: Token"
 ]);
 
 defineAst(outputDir, "Stmt", [
@@ -115,5 +116,5 @@ defineAst(outputDir, "Stmt", [
     "While- condition: Expr, body: Stmt",
     "Function- name: Token, params: Array<Token>, body: Array<Stmt>",
     "Return- keyword: Token, value: Expr | null",
-    "Class- name: Token, methods: Array<Function>"
+    "Class- name: Token, superclass: Variable|null, methods: Array<Function>"
 ]);

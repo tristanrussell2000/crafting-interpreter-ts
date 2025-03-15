@@ -9,6 +9,7 @@ import {
     Literal,
     Logical,
     Set,
+    Super,
     This,
     Unary,
     Variable,
@@ -209,6 +210,20 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
         this.#declare(stmt.name);
         this.#define(stmt.name);
 
+        if (stmt.superclass?.name.lexeme === stmt.name.lexeme) {
+            parseError(stmt.superclass.name, "A class can't inherit from itself.");
+        }
+
+        if (stmt.superclass !== null) {
+            this.#currentClass = ClassType.SUBCLASS;
+            this.#resolve(stmt.superclass);
+        }
+
+        if (stmt.superclass !== null) {
+            this.#beginScope();
+            this.#scopes.at(-1)?.set("super", true);
+        }
+
         this.#beginScope();
         this.#scopes.at(-1)?.set("this", true);
 
@@ -217,6 +232,8 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
             this.#resolveFunction(method, declaration);
         }
         this.#endScope();
+
+        if (stmt.superclass !== null) this.#endScope();
 
         this.#currentClass = enclosingClass;
     }
@@ -236,6 +253,15 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
         }
         this.#resolveLocal(expr);
     }
+
+    visitSuperExpr(expr: Super): void {
+        if (this.#currentClass === ClassType.NONE) {
+            parseError(expr.name, "Can't use 'super' outside of a class.");
+        } else if (this.#currentClass !== ClassType.SUBCLASS) {
+            parseError(expr.name, "Can't use 'super' in a class with no superclass.");
+        }
+        this.#resolveLocal(expr);
+    }
 }
 
 enum FunctionType {
@@ -247,5 +273,6 @@ enum FunctionType {
 
 enum ClassType {
     NONE,
-    CLASS
+    CLASS,
+    SUBCLASS
 }

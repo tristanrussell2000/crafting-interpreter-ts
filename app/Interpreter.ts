@@ -8,6 +8,7 @@ import {
     Literal,
     Logical,
     Set,
+    Super,
     This,
     Unary,
     Variable,
@@ -306,13 +307,30 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     }
 
     visitClassStmt(stmt: Class): void {
+        let superclass: Object | null = null;
+        if (stmt.superclass !== null) {
+            superclass = this.#evaluate(stmt.superclass);
+            if (!(superclass instanceof LoxClass)) {
+                throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+            }
+        }
         this.#environment.define(stmt.name.lexeme, null);
+
+        if (stmt.superclass !== null) {
+            this.#environment = new Environment(this.#environment);
+            this.#environment.define("super", superclass);
+        }
+
         const methods: Map<string, LoxFunction> = new Map();
         for (const method of stmt.methods) {
             const func = new LoxFunction(method, this.#environment, method.name.lexeme === "init");
             methods.set(method.name.lexeme, func);
         }
-        const klass: LoxClass = new LoxClass(stmt.name.lexeme, methods);
+        const klass: LoxClass = new LoxClass(stmt.name.lexeme, superclass, methods);
+
+        if (superclass != null) {
+            this.#environment = this.#environment.enclosing ?? this.#environment;
+        }
         this.#environment.assign(stmt.name, klass);
     }
 
@@ -334,6 +352,24 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         const value = this.#evaluate(expr.value);
         obj.set(expr.name, value);
         return value;
+    }
+
+    visitSuperExpr(expr: Super): Object | null {
+        const distance = this.#locals.get(expr);
+        if (!distance) throw new RuntimeError(expr.name, "Super not defined in this context.");
+
+        const superclass = this.#environment.getAt(distance, "super");
+        if (!(superclass instanceof LoxClass)) throw new RuntimeError(expr.name, "Super must refer to a valid class.");
+
+        const obj = this.#environment.getAt(distance - 1, "this");
+        if (!(obj instanceof LoxInstance)) throw new RuntimeError(expr.name, "'This' not defined in this context.");
+
+        const method = superclass.findMethod(expr.method.lexeme);
+        if (method === null) {
+            throw new RuntimeError(expr.method, `Undefined property '${expr.method.lexeme}'.`);
+        }
+
+        return method?.bind(obj);
     }
 
     visitThisExpr(expr: This): Object | null {

@@ -11,6 +11,7 @@ import {
     Unary,
     Variable,
     This,
+    Super,
 } from "./Expr.js";
 import {
     Block,
@@ -119,6 +120,13 @@ export class Parser {
 
     #classDeclaration(): Stmt {
         const name = this.#consume(TokenType.IDENTIFIER, "Expect class name.");
+
+        let superclass: Variable | null = null;
+        if (this.#match(TokenType.LESS)) {
+            this.#consume(TokenType.IDENTIFIER, "Expect superclass name.");
+            superclass = new Variable(this.#previous());
+        }
+
         this.#consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
 
         const methods: Array<StmtFunction> = [];
@@ -128,7 +136,7 @@ export class Parser {
 
         this.#consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
 
-        return new Class(name, methods);
+        return new Class(name, superclass, methods);
     }
 
     // Kind param so both functions and methods can use this helper
@@ -455,6 +463,13 @@ export class Parser {
                 "Expect ')' after expression."
             );
             return new Grouping(expr);
+        }
+
+        if (this.#match(TokenType.SUPER)) {
+            const name = this.#previous();
+            this.#consume(TokenType.DOT, "Expect '.' after 'super'.");
+            const method = this.#consume(TokenType.IDENTIFIER, "Expect superclass method name.");
+            return new Super(name, method);
         }
 
         throw Parser.error(this.#peek(), "Expect expression.");

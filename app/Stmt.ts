@@ -1,5 +1,5 @@
 import Token from "./Token.js";
-import { Expr } from './Expr.js';
+import { Expr, Variable } from './Expr.js';
 
 export abstract class Stmt{
   abstract accept<R>(visitor: Visitor<R>): R;
@@ -129,11 +129,13 @@ export class Return extends Stmt {
 }
 export class Class extends Stmt {
     readonly name: Token;
+    readonly superclass: Variable|null;
     readonly methods: Array<Function>;
 
-    constructor(name: Token, methods: Array<Function>) {
+    constructor(name: Token, superclass: Variable|null, methods: Array<Function>) {
         super()
         this.name = name;
+        this.superclass = superclass;
         this.methods = methods;
     }
 
