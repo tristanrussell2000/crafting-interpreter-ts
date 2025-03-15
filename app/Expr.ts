@@ -12,6 +12,9 @@ export interface Visitor<R> {
   visitAssignExpr(expr: Assign): R;
   visitLogicalExpr(expr: Logical): R;
   visitCallExpr(expr: Call): R;
+  visitGetExpr(expr: Get): R;
+  visitSetExpr(expr: Set): R;
+  visitThisExpr(expr: This): R;
 }
 
 export class Binary extends Expr {
@@ -124,6 +127,48 @@ export class Call extends Expr {
 
     accept<R>(visitor: Visitor<R>): R {
         return visitor.visitCallExpr(this);
+    }
+}
+export class Get extends Expr {
+    readonly obj: Expr;
+    readonly name: Token;
+
+    constructor(obj: Expr, name: Token) {
+        super()
+        this.obj = obj;
+        this.name = name;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitGetExpr(this);
+    }
+}
+export class Set extends Expr {
+    readonly obj: Expr;
+    readonly name: Token;
+    readonly value: Expr;
+
+    constructor(obj: Expr, name: Token, value: Expr) {
+        super()
+        this.obj = obj;
+        this.name = name;
+        this.value = value;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitSetExpr(this);
+    }
+}
+export class This extends Expr {
+    readonly name: Token;
+
+    constructor(name: Token) {
+        super()
+        this.name = name;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitThisExpr(this);
     }
 }
 

@@ -3,11 +3,14 @@ import {
     Binary,
     Call,
     Expr,
+    Get,
+    Set as ExprSet,
     Grouping,
     Literal,
     Logical,
     Unary,
     Variable,
+    This,
 } from "./Expr.js";
 import {
     Block,
@@ -19,6 +22,7 @@ import {
     While,
     Function as StmtFunction,
     Return,
+    Class,
 } from "./Stmt.js";
 import Token from "./Token.js";
 import TokenType from "./TokenType.js";
@@ -103,6 +107,7 @@ export class Parser {
     // Each matches a same named operator, or one of higher precedence
     #declaration(): Stmt | null {
         try {
+            if (this.#match(TokenType.CLASS)) return this.#classDeclaration();
             if (this.#match(TokenType.FUN)) return this.#function("function");
             if (this.#match(TokenType.VAR)) return this.#varDeclaration();
             return this.#statement();
@@ -110,6 +115,20 @@ export class Parser {
             this.#synchronize();
             return null;
         }
+    }
+
+    #classDeclaration(): Stmt {
+        const name = this.#consume(TokenType.IDENTIFIER, "Expect class name.");
+        this.#consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+        const methods: Array<StmtFunction> = [];
+        while (!this.#check(TokenType.RIGHT_BRACE) && !this.#isAtEnd()) {
+            methods.push(this.#function("method"))
+        }
+
+        this.#consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+
+        return new Class(name, methods);
     }
 
     // Kind param so both functions and methods can use this helper
@@ -282,6 +301,9 @@ export class Parser {
             if (expr instanceof Variable) {
                 const name = expr.name;
                 return new Assign(name, value);
+            } else if (expr instanceof Get) {
+                const get = expr;
+                return new ExprSet(get.obj, get.name, value);
             }
 
             throw Parser.error(equals, "Invalid assignment target.");
@@ -380,6 +402,9 @@ export class Parser {
         while (true) {
             if (this.#match(TokenType.LEFT_PAREN)) {
                 expr = this.#finishCall(expr);
+            } else if (this.#match(TokenType.DOT)) {
+                const name = this.#consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+                expr = new Get(expr, name);
             } else {
                 break;
             }
@@ -413,6 +438,7 @@ export class Parser {
         if (this.#match(TokenType.FALSE)) return new Literal(false);
         if (this.#match(TokenType.TRUE)) return new Literal(true);
         if (this.#match(TokenType.NIL)) return new Literal(null);
+        if (this.#match(TokenType.THIS)) return new This(this.#previous());
 
         if (this.#match(TokenType.NUMBER, TokenType.STRING)) {
             return new Literal(this.#previous().literal);
@@ -443,4 +469,4 @@ export class Parser {
     }
 }
 
-class ParseError extends Error {}
+class ParseError extends Error { }

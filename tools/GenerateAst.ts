@@ -55,13 +55,13 @@ function defineVisitor(
         const typeName = type.split("-")[0];
         writer.write(
             "  visit" +
-                typeName +
-                baseName +
-                "(" +
-                baseName.toLowerCase() +
-                ": " +
-                typeName +
-                "): R;\n"
+            typeName +
+            baseName +
+            "(" +
+            baseName.toLowerCase() +
+            ": " +
+            typeName +
+            "): R;\n"
         );
     }
     writer.write("}\n\n");
@@ -101,6 +101,9 @@ defineAst(outputDir, "Expr", [
     "Assign- name: Token, value: Expr",
     "Logical- left: Expr, operator: Token, right: Expr",
     "Call- callee: Expr, paren: Token, args: Array<Expr>",
+    "Get- obj: Expr, name: Token",
+    "Set- obj: Expr, name: Token, value: Expr",
+    "This- name: Token"
 ]);
 
 defineAst(outputDir, "Stmt", [
@@ -112,4 +115,5 @@ defineAst(outputDir, "Stmt", [
     "While- condition: Expr, body: Stmt",
     "Function- name: Token, params: Array<Token>, body: Array<Stmt>",
     "Return- keyword: Token, value: Expr | null",
+    "Class- name: Token, methods: Array<Function>"
 ]);

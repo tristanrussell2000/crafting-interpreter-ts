@@ -4,9 +4,12 @@ import {
     Call,
     Expr,
     Visitor as ExprVisitor,
+    Get,
     Grouping,
     Literal,
     Logical,
+    Set,
+    This,
     Unary,
     Variable,
 } from "./Expr.js";
@@ -23,14 +26,16 @@ import {
     Print,
     Return,
     While,
+    Class,
 } from "./Stmt.js";
 import Token from "./Token.js";
 
 export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     readonly #interpreter: Interpreter;
-    // False marks variable delcaration not ready yet
+    // False marks variable declaration not ready yet
     readonly #scopes: Array<Map<string, boolean>> = [];
     #currentFunction = FunctionType.NONE;
+    #currentClass = ClassType.NONE;
 
     constructor(interpreter: Interpreter) {
         this.#interpreter = interpreter;
@@ -156,6 +161,9 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
             parseError(stmt.keyword, "Can't return from top-level code");
         }
         if (stmt.value !== null) {
+            if (this.#currentFunction === FunctionType.INITIALIZER) {
+                parseError(stmt.keyword, "Can't reutrn a value from an initializer.");
+            }
             this.#resolve(stmt.value);
         }
     }
@@ -193,9 +201,51 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     visitUnaryExpr(expr: Unary): void {
         this.#resolve(expr.right);
     }
+
+    visitClassStmt(stmt: Class): void {
+        const enclosingClass = this.#currentClass;
+        this.#currentClass = ClassType.CLASS;
+
+        this.#declare(stmt.name);
+        this.#define(stmt.name);
+
+        this.#beginScope();
+        this.#scopes.at(-1)?.set("this", true);
+
+        for (const method of stmt.methods) {
+            let declaration = method.name.lexeme === "init" ? FunctionType.INITIALIZER : FunctionType.METHOD;
+            this.#resolveFunction(method, declaration);
+        }
+        this.#endScope();
+
+        this.#currentClass = enclosingClass;
+    }
+
+    visitGetExpr(expr: Get): void {
+        this.#resolve(expr.obj);
+    }
+
+    visitSetExpr(expr: Set): void {
+        this.#resolve(expr.value);
+        this.#resolve(expr.obj);
+    }
+
+    visitThisExpr(expr: This): void {
+        if (this.#currentClass === ClassType.NONE) {
+            parseError(expr.name, "Can't use 'this' outside of a class.");
+        }
+        this.#resolveLocal(expr);
+    }
 }
 
 enum FunctionType {
     NONE,
     FUNCTION,
+    METHOD,
+    INITIALIZER
+}
+
+enum ClassType {
+    NONE,
+    CLASS
 }

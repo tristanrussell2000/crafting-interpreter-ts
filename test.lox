@@ -1,10 +1,13 @@
-var a = "global";
-{
-  fun showA() {
-    print a;
+class Cake {
+  init() {
+    this.flavor = "Devils chocolate";
+    return "Test";
   }
-
-  showA();
-  var a = "block";
-  showA();
+  taste() {
+    var adj = "delicious";
+    print "The " + this.flavor + " cake is " + adj + "!";
+  }
 }
+
+var cake = Cake();
+cake.taste();

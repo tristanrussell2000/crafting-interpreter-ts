@@ -14,6 +14,7 @@ export interface Visitor<R> {
   visitWhileStmt(stmt: While): R;
   visitFunctionStmt(stmt: Function): R;
   visitReturnStmt(stmt: Return): R;
+  visitClassStmt(stmt: Class): R;
 }
 
 export class Expression extends Stmt {
@@ -124,6 +125,20 @@ export class Return extends Stmt {
 
     accept<R>(visitor: Visitor<R>): R {
         return visitor.visitReturnStmt(this);
+    }
+}
+export class Class extends Stmt {
+    readonly name: Token;
+    readonly methods: Array<Function>;
+
+    constructor(name: Token, methods: Array<Function>) {
+        super()
+        this.name = name;
+        this.methods = methods;
+    }
+
+    accept<R>(visitor: Visitor<R>): R {
+        return visitor.visitClassStmt(this);
     }
 }
 

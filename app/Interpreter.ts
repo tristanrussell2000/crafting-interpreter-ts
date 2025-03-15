@@ -3,9 +3,12 @@ import {
     Binary,
     Call,
     Expr,
+    Get,
     Grouping,
     Literal,
     Logical,
+    Set,
+    This,
     Unary,
     Variable,
     Visitor,
@@ -25,11 +28,14 @@ import {
     While,
     Function,
     Return,
+    Class,
 } from "./Stmt.js";
 import { Environment } from "./Environment.js";
 import { LoxCallable, isLoxCallable } from "./LoxCallable.js";
 import { LoxFunction } from "./LoxFunction.js";
 import { ReturnException } from "./ReturnException.js";
+import { LoxClass } from "./LoxClass.js";
+import { LoxInstance } from "./LoxInstance.js";
 
 export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     readonly globals = new Environment();
@@ -253,7 +259,7 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
     }
 
     visitFunctionStmt(stmt: Function): void {
-        const func = new LoxFunction(stmt, this.#environment);
+        const func = new LoxFunction(stmt, this.#environment, false);
         this.#environment.define(stmt.name.lexeme, func);
     }
 
@@ -297,5 +303,40 @@ export class Interpreter implements Visitor<Object | null>, StmtVisitor<void> {
         while (this.#isTruthy(this.#evaluate(stmt.condition))) {
             this.#execute(stmt.body);
         }
+    }
+
+    visitClassStmt(stmt: Class): void {
+        this.#environment.define(stmt.name.lexeme, null);
+        const methods: Map<string, LoxFunction> = new Map();
+        for (const method of stmt.methods) {
+            const func = new LoxFunction(method, this.#environment, method.name.lexeme === "init");
+            methods.set(method.name.lexeme, func);
+        }
+        const klass: LoxClass = new LoxClass(stmt.name.lexeme, methods);
+        this.#environment.assign(stmt.name, klass);
+    }
+
+    visitGetExpr(expr: Get): Object | null {
+        const obj = this.#evaluate(expr.obj);
+        if (obj instanceof LoxInstance) {
+            return obj.get(expr.name);
+        }
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    visitSetExpr(expr: Set): Object | null {
+        const obj = this.#evaluate(expr.obj);
+
+        if (!(obj instanceof LoxInstance)) {
+            throw new RuntimeError(expr.name, "Only instances have fields.");
+        }
+
+        const value = this.#evaluate(expr.value);
+        obj.set(expr.name, value);
+        return value;
+    }
+
+    visitThisExpr(expr: This): Object | null {
+        return this.#lookUpVariable(expr);
     }
 }
